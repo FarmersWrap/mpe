@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Improving Long-Context Retrieval with Multi-Prefix Embedding">
+    <meta property="og:title" content="Improving Long-Context Retrieval with Multi-Prefix Embedding" />
+    <meta property="og:description" content="Multi-Prefix Embedding (MPE) extracts multiple prefix embeddings from a single causal LM forward pass, enabling fine-grained long-document retrieval via MaxSim scoring." />
+    <title>Improving Long-Context Retrieval with Multi-Prefix Embedding</title>
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans', sans-serif;
+        }
+        .publication-title {
+            font-family: 'Google Sans', sans-serif;
+        }
+        .publication-authors {
+            font-family: 'Google Sans', sans-serif;
+        }
+        .author-block {
+            display: inline-block;
+        }
+        .link-block a {
+            margin-bottom: 0.5rem;
+        }
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table td:first-child {
+            text-align: left;
+        }
+        .table .best {
+            font-weight: bold;
+        }
+        .section-divider {
+            border-top: 2px solid #dbdbdb;
+        }
+        .config-table td:first-child {
+            text-align: left;
+            font-style: italic;
+        }
+        .figure-caption {
+            font-size: 0.95rem;
+            font-style: italic;
+            margin-top: 0.5rem;
+            color: #4a4a4a;
+        }
+        .content h3 {
+            margin-top: 1.5rem;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Hero / Title -->
+    <section class="hero">
+        <div class="hero-body" style="padding-bottom: 0;">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered">
+                    <div class="column has-text-centered">
+                        <h1 class="title is-1 publication-title">
+                            Improving Long-Context Retrieval with Multi-Prefix Embedding
+                        </h1>
+
+                        <div class="is-size-5 publication-authors">
+                            <span class="author-block">Zhenglin Yu<sup>1</sup>,</span>
+                            <span class="author-block">Xueguang Ma<sup>1</sup><sup>*</sup>,</span>
+                            <span class="author-block">Shengyao Zhuang<sup>2</sup>,</span>
+                            <span class="author-block">Zhichao Xu<sup>3</sup>,</span>
+                            <span class="author-block">Luyu Gao<sup>4</sup>,</span>
+                            <span class="author-block">Crystina Zhang<sup>1</sup>,</span>
+                            <span class="author-block">Jimmy Lin<sup>1</sup></span>
+                        </div>
+
+                        <div class="is-size-5 publication-authors" style="margin-top: 0rem;">
+                            <span class="author-block"><small><sup>1</sup>University of Waterloo,</small></span>
+                            <span class="author-block"><small><sup>2</sup>University of Queensland,</small></span>
+                            <span class="author-block"><small><sup>3</sup>University of Utah,</small></span>
+                            <span class="author-block"><small><sup>4</sup>Carnegie Mellon University</small></span>
+                        </div>
+
+                        <div class="is-size-5 publication-authors" style="margin-top: 0rem; margin-bottom: 1rem;">
+                            <span class="author-block"><small>*Corresponding author. <i class="far fa-envelope"></i> x93ma@uwaterloo.ca</small></span>
+                        </div>
+
+                        <div class="column has-text-centered" style="margin-top: 0rem; margin-bottom: 0rem;">
+                            <div class="publication-links" style="display: inline-flex; gap: 1.25rem; flex-wrap: wrap; justify-content: center;">
+                                <span class="link-block">
+                                    <a href="https://github.com/texttron/tevatron" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon"><i class="fab fa-github"></i></span>
+                                        <span>Code</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="#" class="external-link button is-normal is-rounded is-dark" style="opacity: 0.5; pointer-events: none;">
+                                        <span class="icon"><i class="ai ai-arxiv"></i></span>
+                                        <span>Paper (coming soon)</span>
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Abstract -->
+    <section class="section has-background-light" style="padding-top: 3rem; padding-bottom: 3rem;">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Abstract</h2>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content has-text-justified">
+                    <p>
+                        Long-context document retrieval exposes a fundamental tension: single-vector representations compress entire documents into one embedding, inevitably losing fine-grained information, while token-level multi-vector methods preserve detail at prohibitive storage cost. We propose <strong>Multi-Prefix Embedding (MPE)</strong>, which advances the long-context capability of large language model embedding models by partitioning documents into chunks separated by EOS tokens and encoding the entire sequence in a single forward pass. MPE extracts one embedding per prefix position, preserving cross-chunk context through causal attention while enabling fine-grained chunk-level matching via MaxSim scoring. Training MPE requires only document-level relevance labels, sidestepping the need for chunk-level annotations. Comprehensive experiments on MLDR-en, BrowseComp-Plus, and LongEmbed demonstrate the advantage of MPE over competitive single-vector and multi-vector baselines.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Method Figure -->
+    <section class="hero is-small" style="margin-top: 0;">
+        <div class="hero-body" style="padding-top: 1.5rem; padding-bottom: 3rem;">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered">
+                    <div class="column is-four-fifths">
+                        <div class="item has-text-centered">
+                            <img src="static/images/multi-prefix.png" alt="Multi-Prefix Embedding" style="max-width: 85%;" />
+                            <p class="figure-caption has-text-centered">
+                                <strong>Multi-Prefix Embedding (MPE).</strong> A long document is split into chunks and concatenated with EOS tokens into a single sequence. The encoder processes the sequence in one forward pass, and prefix embeddings are extracted at EOS<sub>1</sub>, ..., EOS<sub>K</sub>. Relevance is computed via MaxSim.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Method Overview -->
+    <section class="section">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Method</h2>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content has-text-justified">
+                    <p>
+                        Given a long document with <em>L</em> tokens, MPE partitions it into <em>K</em> consecutive chunks of length <em>s</em> by inserting an EOS token after every <em>s&minus;1</em> content tokens. The entire sequence is encoded in a <strong>single forward pass</strong> through a pretrained causal language model. Because attention is left-to-right, the hidden state at each EOS position conditions on all preceding tokens &mdash; each prefix embedding captures both its local chunk and all prior context.
+                    </p>
+
+                    <h3 class="title is-4">MaxSim Scoring</h3>
+                    <p>
+                        Query&ndash;document similarity is defined as the maximum inner product between the query embedding and any prefix embedding. The max operator reflects the localized nature of relevance: a query typically matches a specific region of a document. We train with standard contrastive loss using cross-device negatives. At search time, all prefix embeddings are indexed in a FAISS flat inner-product index.
+                    </p>
+
+                    <h3 class="title is-4">Random Prefix-Length Augmentation</h3>
+                    <p>
+                        Training with a fixed chunk size can overfit the model to a specific granularity. We introduce <strong>random prefix-length augmentation</strong>: for each training passage, the chunk size is sampled uniformly from [<em>s<sub>min</sub></em>, <em>s<sub>max</sub></em>]. This exposes the model to diverse prefix boundaries and enables a single model to generalize across evaluation chunk sizes without retraining.
+                    </p>
+
+                    <h3 class="title is-4">Configurations</h3>
+                    <p>We compare five settings that progressively introduce components:</p>
+                    <div class="table-container">
+                        <table class="table is-bordered is-striped config-table" style="margin: 0 auto;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Setting</th>
+                                    <th>MaxSim Train</th>
+                                    <th>Cross Chunk-Attn</th>
+                                    <th>Rand-Size</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Single-vector</td><td>&times;</td><td>&mdash;</td><td>&times;</td></tr>
+                                <tr><td>MaxP</td><td>&times;</td><td>&times;</td><td>&times;</td></tr>
+                                <tr><td>MaxP-Train</td><td>&check;</td><td>&times;</td><td>&times;</td></tr>
+                                <tr><td>MPE Fixed-N</td><td>&check;</td><td>&check;</td><td>&times;</td></tr>
+                                <tr><td>MPE-Rand[a,b]</td><td>&check;</td><td>&check;</td><td>&check;</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Results -->
+    <section class="section has-background-light">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Results</h2>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content has-text-justified">
+                    <h3 class="title is-4">Main Results (nDCG@10)</h3>
+                    <div class="table-container">
+                        <table class="table is-bordered is-striped is-fullwidth">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Method</th>
+                                    <th>MLDR-en</th>
+                                    <th>BC+</th>
+                                    <th>NarrativeQA</th>
+                                    <th>2WikiMQA</th>
+                                    <th>SummScreen</th>
+                                    <th>QMSum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>BM25</td><td>0.679</td><td>0.016</td><td>0.715</td><td>0.965</td><td>0.976</td><td>0.813</td></tr>
+                                <tr><td>jina-v2-base-en</td><td>0.370</td><td>&mdash;</td><td>0.394</td><td>0.740</td><td>0.935</td><td>0.389</td></tr>
+                                <tr><td>OpenAI-Ada-002</td><td>0.387</td><td>&mdash;</td><td>0.411</td><td>0.801</td><td>0.918</td><td>0.400</td></tr>
+                                <tr><td>E5-Mistral-7B</td><td>0.433</td><td>&mdash;</td><td>0.449</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+                                <tr><td>BGE-M3</td><td>0.489</td><td>&mdash;</td><td>0.487</td><td>0.780</td><td>0.940</td><td>0.355</td></tr>
+                                <tr><td>BGE-M3<sub>mv</sub></td><td>0.558</td><td>&mdash;</td><td>0.554</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+                                <tr class="section-divider">
+                                    <td>Single-vector</td><td>0.548</td><td>0.132</td><td>0.544</td><td>0.865</td><td class="best">0.980</td><td>0.564</td>
+                                </tr>
+                                <tr><td>MaxP</td><td>0.758</td><td>0.103</td><td class="best">0.604</td><td>0.944</td><td>0.908</td><td>0.550</td></tr>
+                                <tr><td>MaxP-Train</td><td>0.776</td><td>0.104</td><td>0.557</td><td>0.945</td><td>0.903</td><td>0.569</td></tr>
+                                <tr><td>MPE Fixed-64</td><td class="best">0.783</td><td>0.122</td><td>0.576</td><td>0.940</td><td>0.925</td><td>0.652</td></tr>
+                                <tr><td>MPE-Rand[32,1024]</td><td>0.760</td><td class="best">0.153</td><td>0.579</td><td class="best">0.945</td><td>0.949</td><td class="best">0.705</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="figure-caption has-text-centered">
+                        Baseline results from original papers. All our methods (below divider) use Qwen3-Embedding (0.6B); multi-vector methods evaluated at chunk size 64. Bold = best among dense methods (excluding BM25). LongEmbed and BrowseComp-Plus results are zero-shot (trained on MLDR-en only).
+                    </p>
+
+                    <h3 class="title is-4">Key Findings</h3>
+                    <ul>
+                        <li><strong>Multi-vector representations drive the biggest gains.</strong> MaxP improves MLDR-en from 0.548 to 0.758 by simply chunking at inference time, demonstrating that multiple embeddings recover fine-grained signals that a single vector compresses away.</li>
+                        <li><strong>Cross-chunk context helps on structured documents.</strong> MPE Fixed-64 outperforms MaxP-Train on BrowseComp-Plus (0.122 vs. 0.104), suggesting contextualization across chunk boundaries mitigates structural fragmentation.</li>
+                        <li><strong>Granularity robustness is critical for transfer.</strong> On BrowseComp-Plus, all fixed-granularity multi-vector methods underperform single-vector, but MPE-Rand (0.153) is the only variant to surpass it.</li>
+                    </ul>
+
+                    <h3 class="title is-4">End-to-End Agent Evaluation</h3>
+                    <p>MPE-Rand as the retrieval backend in an agentic QA pipeline on BrowseComp-Plus (Gemini 3 Flash Preview agent):</p>
+                    <div class="table-container">
+                        <table class="table is-bordered is-striped" style="margin: 0 auto;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Retriever</th>
+                                    <th>Acc. (%)</th>
+                                    <th>Recall (%)</th>
+                                    <th>Avg. Calls</th>
+                                    <th>Cal. Err. (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>BM25</td><td>34.94</td><td>37.78</td><td>18.85</td><td>51.17</td></tr>
+                                <tr><td>Single-vector</td><td>42.29</td><td>48.00</td><td>17.40</td><td>46.99</td></tr>
+                                <tr><td>MPE-Rand[32,1024]</td><td class="best">51.45</td><td class="best">57.70</td><td class="best">15.78</td><td class="best">39.74</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="figure-caption has-text-centered">
+                        MPE-Rand improves end-to-end accuracy from 42.29% to 51.45% (+21.7% relative) while requiring fewer search calls.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Granularity Mismatch -->
+    <section class="section">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Granularity Robustness</h2>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content has-text-justified">
+                    <div class="has-text-centered" style="margin-bottom: 1rem;">
+                        <img src="static/images/granularity_mismatch.png" alt="Granularity mismatch" style="max-width: 60%;" />
+                        <p class="figure-caption">
+                            <strong>Granularity mismatch on MLDR-en.</strong> Fixed-size MPE specialists (stars = matched train&ndash;eval size) degrade sharply at mismatched evaluation granularities, while MPE-Rand traces the upper envelope with a single model.
+                        </p>
+                    </div>
+                    <p>
+                        Fixed-size specialists degrade sharply at mismatched evaluation sizes. MPE-Rand[32,1024] achieves performance comparable to each specialist's peak at the corresponding chunk size, consistently avoiding steep performance drops. This decouples training granularity from evaluation granularity: a single trained model can be deployed at any chunk size &mdash; larger chunks for a compact index, finer chunks for higher recall &mdash; without retraining.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MaxSim Analysis -->
+    <section class="section has-background-light">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Analysis: Where Does MaxSim Select?</h2>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content has-text-justified">
+                    <div class="has-text-centered" style="margin-bottom: 1rem;">
+                        <img src="static/images/maxsim_vs_gt_3.jpg" alt="MaxSim vs ground truth" style="max-width: 90%;" />
+                        <p class="figure-caption">
+                            <strong>MaxSim-selected chunk positions vs. Gemini-annotated ground-truth answer positions</strong> on MLDR-en (714 passages; 64-token chunks, 128 chunks per document). Left: overlaid position distributions with nearly identical means (chunk 71.9 vs. 71.0). Right: per-passage scatter plot showing strong rank correlation (Spearman &rho; = 0.77).
+                        </p>
+                    </div>
+                    <p>
+                        MaxSim localizes the correct chunk within &plusmn;1 position for 65.7% of passages, with Spearman &rho; = 0.77 (p &lt; 10<sup>&minus;138</sup>). This confirms that MPE's improvement comes from preserving and identifying relevant chunks, providing a natural <strong>source attribution mechanism</strong>: the MaxSim-selected chunk can be directly surfaced to users as supporting evidence.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Citation -->
+    <section class="section">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content">
+                    <h2 class="title is-3">Citation</h2>
+                    <p>If you find this work useful, please cite:</p>
+                    <pre>
+@inproceedings{yu2025mpe,
+    title={Improving Long-Context Retrieval with Multi-Prefix Embedding},
+    author={Yu, Zhenglin and Ma, Xueguang and Zhuang, Shengyao and Xu, Zhichao and Gao, Luyu and Zhang, Crystina and Lin, Jimmy},
+    booktitle={LateInteraction Workshop},
+    year={2025}
+}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer" style="padding: 1.5rem;">
+        <div class="container">
+            <div class="content has-text-centered">
+                <p><small>Built with <a href="https://github.com/texttron/tevatron" target="_blank">Tevatron</a>. Template inspired by <a href="https://texttron.github.io/BrowseComp-Plus/" target="_blank">BrowseComp-Plus</a>.</small></p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
