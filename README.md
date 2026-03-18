@@ -1,6 +1,14 @@
 # Improving Long-Context Retrieval with Multi-Prefix Embedding
 
-Project page: [https://farmerswrap.github.io/mpe/](https://farmerswrap.github.io/mpe/)
+**Multi-Prefix Embedding (MPE)** is a chunk-level multi-vector retrieval method for long documents. It partitions a document into chunks separated by EOS tokens and encodes the entire sequence in a single causal LM forward pass. Each prefix embedding captures both its local chunk and all preceding context through causal attention. Query--document similarity is computed via MaxSim, and training requires only document-level relevance labels. Random prefix-length augmentation yields a single model that generalizes across chunk sizes without retraining.
+
+Experiments on MLDR-en, BrowseComp-Plus, and LongEmbed show consistent gains over single-vector and independent chunking baselines.
+
+|  |  |
+|---|---|
+| Project page | [https://farmerswrap.github.io/mpe/](https://farmerswrap.github.io/mpe/) |
+| Code | [`examples/mpe/`](https://github.com/FarmersWrap/tevatron/tree/preprint/examples/mpe) in Tevatron |
+| Models & Embeddings | [FarmersWrap/mpe-repro](https://huggingface.co/FarmersWrap/mpe-repro) on HuggingFace |
 
 ## Comparison with Perplexity Contextualized Embeddings
 
@@ -20,13 +28,13 @@ Perplexity Ctx 0.6b performs at base-model level; MPE Fixed-64 (0.6B) wins on 3 
 
 ## Reproduction
 
-All results in the paper can be reproduced end-to-end using the scripts in [`examples/mpe/`](https://github.com/texttron/tevatron/tree/main/examples/mpe). We also release pretrained LoRA adapters and precomputed embeddings on [HuggingFace](https://huggingface.co/FarmersWrap/mpe-repro) so you can skip training and/or encoding and jump straight to evaluation.
+All results in the paper can be reproduced end-to-end using the scripts in [`examples/mpe/`](https://github.com/FarmersWrap/tevatron/tree/preprint/examples/mpe). We also release pretrained LoRA adapters and precomputed embeddings on [HuggingFace](https://huggingface.co/FarmersWrap/mpe-repro) so you can skip training and/or encoding and jump straight to evaluation.
 
 ### Requirements
 
 ```bash
 pip install transformers "datasets==2.21.0" peft faiss-cpu pyserini
-git clone https://github.com/texttron/tevatron && cd tevatron && pip install -e .
+git clone -b preprint https://github.com/FarmersWrap/tevatron && cd tevatron && pip install -e .
 ```
 
 Hardware: 8 GPUs recommended (tested on 8x RTX 5090). Training uses `torchrun`; corpus encoding is sharded across GPUs in parallel.
