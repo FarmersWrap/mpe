@@ -107,6 +107,12 @@
                                         <span>Paper (coming soon)</span>
                                     </a>
                                 </span>
+                                <span class="link-block">
+                                    <a href="https://huggingface.co/FarmersWrap/mpe-repro" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">&#129303;</span>
+                                        <span>Models & Embeddings</span>
+                                    </a>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -329,8 +335,134 @@
         </div>
     </section>
 
-    <!-- Citation -->
+    <!-- Reproduction -->
     <section class="section">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Reproduction</h2>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content has-text-justified">
+                    <p>
+                        All results in the paper can be reproduced end-to-end using the scripts in
+                        <a href="https://github.com/texttron/tevatron/tree/main/examples/mpe" target="_blank"><code>examples/mpe/</code></a>.
+                        We also release pretrained LoRA adapters and precomputed embeddings on
+                        <a href="https://huggingface.co/FarmersWrap/mpe-repro" target="_blank">HuggingFace</a>
+                        so you can skip training and/or encoding and jump straight to evaluation.
+                    </p>
+
+                    <h3 class="title is-4">Requirements</h3>
+<pre>pip install transformers "datasets==2.21.0" peft faiss-cpu pyserini
+git clone https://github.com/texttron/tevatron && cd tevatron && pip install -e .</pre>
+                    <p>Hardware: 8 GPUs recommended (tested on 8x RTX 5090). Training uses <code>torchrun</code>; corpus encoding is sharded across GPUs in parallel.</p>
+
+                    <h3 class="title is-4">Quick Start (Full Pipeline)</h3>
+<pre>cd examples/mpe
+python 00_prepare_data.py          # Download & prepare MLDR-en and BrowseComp-Plus data
+bash 01_train.sh                   # Train 4 LoRA adapters on MLDR-en (1 epoch each)
+bash 02_eval_mldr_en.sh            # Encode, search, evaluate on MLDR-en
+bash 03_eval_browsecomp_plus.sh    # Encode, search, evaluate on BrowseComp-Plus
+bash 04_eval_longembed.sh          # Encode, search, evaluate on 4 LongEmbed datasets
+python 05_collect_results.py       # Aggregate all scores into a single table</pre>
+
+                    <h3 class="title is-4">Pretrained Models</h3>
+                    <p>
+                        Four LoRA adapters (base model: <a href="https://huggingface.co/Qwen/Qwen3-Embedding-0.6B" target="_blank">Qwen3-Embedding-0.6B</a>) are available at
+                        <a href="https://huggingface.co/FarmersWrap/mpe-repro" target="_blank"><code>FarmersWrap/mpe-repro</code></a>:
+                    </p>
+                    <div class="table-container">
+                        <table class="table is-bordered is-striped" style="margin: 0 auto;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Model</th>
+                                    <th style="text-align: left;">Training Args</th>
+                                    <th style="text-align: left;">Used By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="text-align:left;"><code>models/nochunk-epoch1</code></td><td style="text-align:left;"><code>--passage_chunk_size 0</code></td><td style="text-align:left;">Single-vector, MaxP</td></tr>
+                                <tr><td style="text-align:left;"><code>models/maxp-train-epoch1</code></td><td style="text-align:left;"><code>--passage_chunk_size 64 --passage_chunk_independent</code></td><td style="text-align:left;">MaxP-Train</td></tr>
+                                <tr><td style="text-align:left;"><code>models/fixed-64-epoch1</code></td><td style="text-align:left;"><code>--passage_chunk_size 64</code></td><td style="text-align:left;">MPE Fixed-64</td></tr>
+                                <tr><td style="text-align:left;"><code>models/prand-32to1024-epoch1</code></td><td style="text-align:left;"><code>--passage_chunk_size_range 32,1024</code></td><td style="text-align:left;">MPE-Rand</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="title is-4">Precomputed Embeddings</h3>
+                    <p>
+                        Precomputed query and corpus embeddings for all 5 configurations across all benchmarks are available under <code>encode/</code> in the same HuggingFace repo.
+                        To skip training and encoding and go directly to search + evaluation:
+                    </p>
+<pre># Download embeddings
+pip install huggingface_hub
+huggingface-cli download FarmersWrap/mpe-repro --local-dir mpe-repro
+
+# Run search + eval on MLDR-en (example for MPE-Rand)
+python -m tevatron.retriever.driver.search \
+    --query_reps mpe-repro/encode/mldr-en/mpe-rand-32to1024/queries.pkl \
+    --passage_reps "mpe-repro/encode/mldr-en/mpe-rand-32to1024/corpus.*.pkl" \
+    --depth 100 --batch_size 64 --save_text \
+    --chunked --chunk_multiplier 10 \
+    --save_ranking_to ranking.txt
+
+python -m tevatron.utils.format.convert_result_to_trec \
+    --input ranking.txt --output ranking.trec --remove_query
+
+python -m pyserini.eval.trec_eval \
+    -m ndcg_cut.10 -m recall.100 \
+    data/qrels.tsv ranking.trec</pre>
+
+                    <h3 class="title is-4">Available Embeddings</h3>
+                    <div class="table-container">
+                        <table class="table is-bordered is-striped" style="margin: 0 auto; font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Benchmark</th>
+                                    <th style="text-align: left;">Configs</th>
+                                    <th style="text-align: left;">Path</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="text-align:left;">MLDR-en</td><td style="text-align:left;">all 5</td><td style="text-align:left;"><code>encode/mldr-en/{config}/</code></td></tr>
+                                <tr><td style="text-align:left;">BrowseComp-Plus</td><td style="text-align:left;">all 5</td><td style="text-align:left;"><code>encode/browsecomp-plus/{config}/</code></td></tr>
+                                <tr><td style="text-align:left;">NarrativeQA</td><td style="text-align:left;">all 5</td><td style="text-align:left;"><code>encode/longembed/narrativeqa/{config}/</code></td></tr>
+                                <tr><td style="text-align:left;">2WikiMQA</td><td style="text-align:left;">all 5</td><td style="text-align:left;"><code>encode/longembed/2wikimqa/{config}/</code></td></tr>
+                                <tr><td style="text-align:left;">SummScreen</td><td style="text-align:left;">all 5</td><td style="text-align:left;"><code>encode/longembed/summ_screen_fd/{config}/</code></td></tr>
+                                <tr><td style="text-align:left;">QMSum</td><td style="text-align:left;">all 5</td><td style="text-align:left;"><code>encode/longembed/qmsum/{config}/</code></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="figure-caption has-text-centered">
+                        Configs: <code>single-vector</code>, <code>maxp</code>, <code>maxp-train</code>, <code>mpe-fixed64</code>, <code>mpe-rand-32to1024</code>. Each contains <code>queries.pkl</code> and <code>corpus.{0..7}.pkl</code>.
+                    </p>
+
+                    <h3 class="title is-4">Output Structure</h3>
+<pre>{EXP_ROOT}/
+├── models/                         # LoRA checkpoints
+│   ├── nochunk-epoch1/
+│   ├── maxp-train-epoch1/
+│   ├── fixed-64-epoch1/
+│   └── prand-32to1024-epoch1/
+├── encode/                         # Pickled embeddings
+│   ├── mldr-en/{config}/
+│   ├── browsecomp-plus/{config}/
+│   └── longembed/{dataset}/{config}/
+├── results/                        # Rankings and TREC files
+│   ├── mldr-en/{config}/
+│   ├── browsecomp-plus/{config}/
+│   └── longembed/{dataset}/{config}/
+└── data/                           # Evaluation data
+    ├── corpus.jsonl, queries.jsonl, qrels.tsv
+    └── longembed/{dataset}/</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Citation -->
+    <section class="section has-background-light">
         <div class="container is-max-desktop">
             <div class="columns is-centered">
                 <div class="column is-four-fifths content">
