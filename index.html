@@ -335,8 +335,51 @@
         </div>
     </section>
 
-    <!-- Reproduction -->
+    <!-- Perplexity Comparison -->
     <section class="section">
+        <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Comparison with Perplexity Contextualized Embeddings</h2>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-four-fifths content has-text-justified">
+                    <p>
+                        We compare MPE against <a href="https://docs.perplexity.ai/docs/embeddings/contextualized-embeddings" target="_blank">Perplexity Contextualized Embeddings</a>, a proprietary API that also produces context-aware chunk embeddings. We evaluate both the 0.6B and 4B variants on four LongEmbed datasets (nDCG@10):
+                    </p>
+                    <div class="table-container">
+                        <table class="table is-bordered is-striped" style="margin: 0 auto;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Method</th>
+                                    <th>QMSum</th>
+                                    <th>2WikiMQA</th>
+                                    <th>SummScreen</th>
+                                    <th>NarrativeQA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Base no-chunk</td><td>0.4504</td><td>0.8470</td><td>0.9662</td><td>0.5088</td></tr>
+                                <tr><td>Base chunk@64 (MV-Infer)</td><td>0.5659</td><td>0.9021</td><td>0.9608</td><td>0.6090</td></tr>
+                                <tr><td>Single-vec fine-tuned</td><td>0.5635</td><td>0.8648</td><td class="best">0.9800</td><td>0.5435</td></tr>
+                                <tr><td>MV-Train+Infer</td><td>0.5660</td><td>0.9427</td><td>0.8993</td><td>0.5553</td></tr>
+                                <tr><td>MPE Fixed-64</td><td>0.6521</td><td class="best">0.9475</td><td>0.9278</td><td>0.5802</td></tr>
+                                <tr class="section-divider"><td>Pplx Ctx 0.6b</td><td>0.4452</td><td>0.8985</td><td>0.9363</td><td>0.5509</td></tr>
+                                <tr><td>Pplx Ctx 4b</td><td class="best">0.7116</td><td>0.9312</td><td>0.9734</td><td class="best">0.6026</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="figure-caption has-text-centered">
+                        Perplexity Ctx 0.6b performs at base-model level; MPE Fixed-64 (0.6B) wins on 3 of 4 datasets. The larger Pplx Ctx 4b is strongest overall but uses a 7x larger model.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reproduction -->
+    <section class="section has-background-light">
         <div class="container is-max-desktop">
             <div class="columns is-centered has-text-centered">
                 <div class="column is-four-fifths">
@@ -462,7 +505,7 @@ python -m pyserini.eval.trec_eval \
     </section>
 
     <!-- Citation -->
-    <section class="section has-background-light">
+    <section class="section">
         <div class="container is-max-desktop">
             <div class="columns is-centered">
                 <div class="column is-four-fifths content">
