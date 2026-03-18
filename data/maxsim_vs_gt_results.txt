@@ -1,0 +1,28 @@
+MaxSim vs Ground-Truth Chunk Position Comparison
+=================================================
+MaxSim source: /ssd/paper-results/encode/test/fixed-64-epoch1/runs/rank.txt.chunk_stats.tsv
+GT source:     /ssd/paper-results/data/gemini_chunk_analysis_64.json
+Figure:        /home/ryan/quickdev/maxsim_vs_gt.jpg
+
+MaxSim entries: 791
+GT entries (with answer): 718
+Shared (intersection): 714
+
+=======================================================
+  Stats on 714 shared passages
+=======================================================
+  MaxSim norm pos: mean=0.6580, std=0.2001
+  GT norm pos:     mean=0.6504, std=0.1883
+
+  Exact chunk match: 84/714 (0.1176)
+  Within  1 chunks:   469/714 (0.6569)
+  Within  3 chunks:   583/714 (0.8165)
+  Within  5 chunks:   596/714 (0.8347)
+  Within 10 chunks:   615/714 (0.8613)
+
+  Mean absolute error (chunks): 8.50
+  Mean absolute error (normalized): 0.0743
+
+  Pearson r (normalized pos):  0.5096 (p=1.90e-48)
+  Spearman rho (chunk index):  0.7651 (p=3.02e-138)
+  Histogram Pearson r:         0.8087 (p=8.08e-31)
